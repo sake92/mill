@@ -42,7 +42,6 @@ public class MillEnv {
 
     static String[] millClasspath() {
         String selfJars = "";
-        List<String> vmOptions = new LinkedList<>();
         String millOptionsPath = System.getProperty("MILL_OPTIONS_PATH");
         if (millOptionsPath != null) {
 

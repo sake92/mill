@@ -20,7 +20,7 @@ object ScalaVersionsRangesTests extends TestSuite {
     }
   }
   val resourcePath =
-    os.pwd / 'scalalib / 'test / 'resources / "scala-versions-ranges"
+    os.pwd / "scalalib" / "test" / "resources" / "scala-versions-ranges"
 
   def workspaceTest[T](
       m: TestUtil.BaseModule

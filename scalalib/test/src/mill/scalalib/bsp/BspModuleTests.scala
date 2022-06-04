@@ -61,8 +61,8 @@ object BspModuleTests extends TestSuite {
           )
 
           assert(
-            result.size == 3,
-            result.map(_.resolve(eval.evaluator.pathsResolver).last).toSet == Set(
+            result.iterator.size == 3,
+            result.map(_.resolve(eval.evaluator.pathsResolver).last).iterator.toSet == Set(
               "resources",
               "slf4j-api-1.7.34.jar",
               s"scala-library-${testScalaVersion}.jar"
@@ -95,7 +95,7 @@ object BspModuleTests extends TestSuite {
             ).sortBy(_.toString)
 
             assert(
-              result.size == 7,
+              result.iterator.size == 7,
               relResults == expected,
               evalCount > 0
             )

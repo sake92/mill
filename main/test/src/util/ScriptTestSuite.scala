@@ -71,7 +71,7 @@ abstract class ScriptTestSuite(fork: Boolean, clientServer: Boolean = false) ext
       val stdoutArray = outputStream.toByteArray
       val stdout: Seq[String] =
         if (stdoutArray.isEmpty) Seq.empty
-        else new String(stdoutArray).split('\n')
+        else new String(stdoutArray).split('\n').toSeq
       (result, stdout)
     } else {
       val output = Seq.newBuilder[String]

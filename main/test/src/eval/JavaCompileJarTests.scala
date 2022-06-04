@@ -15,7 +15,7 @@ object JavaCompileJarTests extends TestSuite {
   def compileAll(sources: mill.api.Loose.Agg[mill.api.PathRef])(implicit ctx: Dest) = {
     os.makeDir.all(ctx.dest)
 
-    os.proc("javac", sources.map(_.path.toString()).toSeq, "-d", ctx.dest).call(ctx.dest)
+    os.proc("javac", sources.map(_.path.toString()).iterator.toSeq, "-d", ctx.dest).call(ctx.dest)
     mill.api.PathRef(ctx.dest)
   }
 
@@ -156,14 +156,14 @@ object JavaCompileJarTests extends TestSuite {
         evaluator.outPath / "jar.dest" / "out.jar",
         "test.Foo"
       ).call(evaluator.outPath).out.text()
-      assert(executed == (31337 + 271828) + System.lineSeparator)
+      assert(executed == "" + (31337 + 271828) + System.lineSeparator)
 
       for (i <- 0 until 3) {
         // Build.run is not cached, so every time we eval it it has to
         // re-evaluate
         val Right((runOutput, evalCount)) = eval(Build.run("test.Foo"))
         assert(
-          runOutput.out.text() == (31337 + 271828) + System.lineSeparator,
+          runOutput.out.text() == "" + (31337 + 271828) + System.lineSeparator,
           evalCount == 1
         )
       }

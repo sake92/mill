@@ -11,11 +11,11 @@ class ScoverageReportWorker extends AutoCloseable {
   def bridge(classpath: Agg[os.Path])(implicit ctx: Ctx): ScoverageReportWorkerApi = {
     val klassName = "mill.contrib.scoverage.worker.ScoverageReportWorkerImpl"
     val classloaderSig =
-      classpath.map(p => p.toString().hashCode + os.mtime(p)).sum
+      classpath.map(p => p.toString().hashCode + os.mtime(p)).iterator.sum
     val cl = scoverageClCache match {
       case Some((sig, cl)) if sig == classloaderSig => cl
       case _ =>
-        val toolsClassPath = classpath.map(_.toIO.toURI.toURL).toVector
+        val toolsClassPath = classpath.map(_.toIO.toURI.toURL).iterator.to(Vector)
         ctx.log.debug("Loading worker classes from\n" + toolsClassPath.mkString("\n"))
         val cl = ClassLoader.create(
           toolsClassPath,

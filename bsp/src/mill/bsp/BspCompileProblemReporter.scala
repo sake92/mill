@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 import ch.epfl.scala.bsp4j._
 import ch.epfl.scala.{bsp4j => bsp}
 import mill.api.{CompileProblemReporter, Problem}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.concurrent
 import scala.language.implicitConversions
 

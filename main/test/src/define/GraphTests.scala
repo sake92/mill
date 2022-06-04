@@ -64,7 +64,7 @@ object GraphTests extends TestSuite {
       "bigSingleTerminal" - {
         val result = Graph.topoSorted(Graph.transitiveTargets(Agg(bigSingleTerminal.j))).values
         TestUtil.checkTopological(result)
-        assert(result.size == 28)
+        assert(result.iterator.size == 28)
       }
     }
 
@@ -84,10 +84,10 @@ object GraphTests extends TestSuite {
         val flattened = Agg.from(grouped.values().flatMap(_.items))
 
         TestUtil.checkTopological(flattened)
-        for ((terminal, expectedSize) <- expected) {
+        for ((terminal, expectedSize) <- expected.iterator) {
           val grouping = grouped.lookupKey(terminal)
           assert(
-            grouping.size == expectedSize,
+            grouping.iterator.size == expectedSize,
             grouping.flatMap(_.asTarget: Option[Target[_]]).filter(important.contains) == Agg(
               terminal
             )

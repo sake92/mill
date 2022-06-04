@@ -14,11 +14,11 @@ class ScalaPBWorker extends AutoCloseable {
   private var scalaPBInstanceCache = Option.empty[(Long, ScalaPBWorkerApi)]
 
   private def scalaPB(scalaPBClasspath: Agg[os.Path])(implicit ctx: mill.api.Ctx) = {
-    val classloaderSig = scalaPBClasspath.map(p => p.toString().hashCode + os.mtime(p)).sum
+    val classloaderSig = scalaPBClasspath.map(p => p.toString().hashCode + os.mtime(p)).iterator.sum
     scalaPBInstanceCache match {
       case Some((sig, instance)) if sig == classloaderSig => instance
       case _ =>
-        val pbcClasspath = scalaPBClasspath.map(_.toIO.toURI.toURL).toVector
+        val pbcClasspath = scalaPBClasspath.map(_.toIO.toURI.toURL).iterator.to(Vector)
         val cl = mill.api.ClassLoader.create(pbcClasspath, null)
         val scalaPBCompilerClass = cl.loadClass("scalapb.ScalaPBC")
         val mainMethod = scalaPBCompilerClass.getMethod("main", classOf[Array[java.lang.String]])

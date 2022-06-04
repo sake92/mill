@@ -7,12 +7,12 @@ import mill.define.Discover
 import mill.eval.EvaluatorPaths
 import mill.scalalib.{CrossScalaModule, DepSyntax, Lib, PublishModule, TestModule}
 import mill.testrunner.TestRunner
-import mill.scalalib.api.Util.isScala3
+import mill.scalalib.api.ZincWorkerUtil.isScala3
 import mill.scalalib.publish.{Developer, License, PomSettings, VersionControl}
 import mill.util.{TestEvaluator, TestUtil}
 import utest._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import mill.scalajslib.api._
 
 object HelloJSWorldTests extends TestSuite {
@@ -202,7 +202,7 @@ object HelloJSWorldTests extends TestSuite {
 
       val (doneMsg, testResults) = res
       testResults
-        .groupBy(_.fullyQualifiedName)
+        .groupBy(_.fullyQualifiedName).view
         .mapValues(_.map(e => e.selector -> e).toMap)
         .toMap
     }

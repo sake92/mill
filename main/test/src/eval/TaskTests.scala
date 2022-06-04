@@ -91,7 +91,7 @@ trait TaskTests extends TestSuite {
     }
   }
 
-  def withEnv(f: (Build, TestEvaluator) => Unit)(implicit tp: TestPath)
+  def withEnv(f: (Build, TestEvaluator) => Unit)(implicit tp: TestPath): Unit
 
   val tests = Tests {
 
@@ -112,7 +112,7 @@ trait TaskTests extends TestSuite {
 
     "persistent" - withEnv { (build, check) =>
       // Persistent tasks keep the working dir around between runs
-      println(build.millSourcePath + "\n")
+      println("" + build.millSourcePath + "\n")
       check.apply(build.persistent) ==> Right((1, 1))
       check.apply(build.persistent) ==> Right((2, 1))
       check.apply(build.persistent) ==> Right((3, 1))

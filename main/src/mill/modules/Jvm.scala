@@ -354,10 +354,10 @@ object Jvm {
     try {
       assert(inputPaths.iterator.forall(os.exists(_)))
       for {
-        p <- inputPaths
+        p <- inputPaths.iterator
         (file, mapping) <-
           if (os.isFile(p)) Iterator(p -> os.rel / p.last)
-          else os.walk(p).filter(os.isFile).map(sub => sub -> sub.relativeTo(p)).sorted
+          else os.walk(p).filter(os.isFile).map(sub => sub -> sub.relativeTo(p)).sorted.iterator
         if !seen(mapping) && fileFilter(p, mapping)
       } {
         seen.add(mapping)
@@ -576,7 +576,7 @@ object Jvm {
       Result.Failure(msg)
     } else {
 
-      val coursierCache0 = coursier.cache.FileCache[Task].noCredentials
+      val coursierCache0 = coursier.cache.FileCache[Task]().noCredentials
       val coursierCache = coursierCacheCustomizer.getOrElse(
         identity[coursier.cache.FileCache[Task]](_)
       ).apply(coursierCache0)
@@ -589,7 +589,7 @@ object Jvm {
         val loadedArtifacts = Gather[Task].gather(
           for (a <- artifacts)
             yield coursierCache.file(a).run.map(a.optional -> _)
-        ).unsafeRun
+        ).unsafeRun()
 
         val errors = loadedArtifacts.collect {
           case (false, Left(x)) => x
@@ -666,9 +666,10 @@ object Jvm {
 
     val resolutionLogger = ctx.map(c => new TickerResolutionLogger(c))
     val coursierCache0 = resolutionLogger match {
-      case None => coursier.cache.FileCache[Task].withCachePolicies(cachePolicies)
+      case None =>
+        coursier.cache.FileCache[Task]().withCachePolicies(cachePolicies)
       case Some(l) =>
-        coursier.cache.FileCache[Task]
+        coursier.cache.FileCache[Task]()
           .withCachePolicies(cachePolicies)
           .withLogger(l)
     }
@@ -699,7 +700,7 @@ object Jvm {
     }
 
     val resolution = retriedResolution()
-    (deps.iterator.to(Seq), resolution)
+    (deps.iterator.toSeq, resolution)
   }
 
   /**

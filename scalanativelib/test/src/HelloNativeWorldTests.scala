@@ -6,14 +6,14 @@ import mill.api.Result
 import mill.define.Discover
 import mill.eval.EvaluatorPaths
 import mill.scalalib.{CrossScalaModule, DepSyntax, Lib, PublishModule, TestModule}
-import mill.scalalib.api.Util.isScala3
+import mill.scalalib.api.ZincWorkerUtil.isScala3
 import mill.testrunner.TestRunner
 import mill.scalalib.publish.{Developer, License, PomSettings, VersionControl}
 import mill.scalanativelib.api._
 import mill.util.{TestEvaluator, TestUtil}
 import utest._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object HelloNativeWorldTests extends TestSuite {
   val workspacePath = TestUtil.getOutPathStatic() / "hello-native-world"
@@ -151,7 +151,7 @@ object HelloNativeWorldTests extends TestSuite {
 
       val (doneMsg, testResults) = res
       testResults
-        .groupBy(_.fullyQualifiedName)
+        .groupBy(_.fullyQualifiedName).view
         .mapValues(_.map(e => e.selector -> e).toMap)
         .toMap
     }
@@ -202,7 +202,7 @@ object HelloNativeWorldTests extends TestSuite {
       val Right((_, evalCount)) = helloWorldEvaluator(task)
 
       val paths = EvaluatorPaths.resolveDestPaths(helloWorldEvaluator.outPath, task)
-      val stdout = os.proc(paths.dest / "out").call().out.lines
+      val stdout = os.proc(paths.dest / "out").call().out.lines()
       assert(
         stdout.contains("Hello Scala Native"),
         evalCount > 0

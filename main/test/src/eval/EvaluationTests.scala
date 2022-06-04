@@ -44,7 +44,7 @@ class EvaluationTests(threadCount: Option[Int]) extends TestSuite {
 
       assert(
         evaled.values == Seq(expValue),
-        matchingReturnedEvaled.toSet == expEvaled.toSet,
+        matchingReturnedEvaled.toSet == expEvaled.iterator.toSet,
         extraEvaled == -1 || extra.length == extraEvaled
       )
 
@@ -182,7 +182,7 @@ class EvaluationTests(threadCount: Option[Int]) extends TestSuite {
         val checker = new Checker(separateGroups)
         val evaled1 = checker.evaluator.evaluate(Agg(right, left))
         val filtered1 = evaled1.evaluated.filter(_.isInstanceOf[Target[_]])
-        assert(filtered1.toSeq.sortBy(_.toString) == Seq(change, left, right).sortBy(_.toString))
+        assert(filtered1.iterator.toSeq.sortBy(_.toString) == Seq(change, left, right).sortBy(_.toString))
         val evaled2 = checker.evaluator.evaluate(Agg(right, left))
         val filtered2 = evaled2.evaluated.filter(_.isInstanceOf[Target[_]])
         assert(filtered2 == Agg())

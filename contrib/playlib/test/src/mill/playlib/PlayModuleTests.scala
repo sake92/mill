@@ -70,7 +70,7 @@ object PlayModuleTests extends TestSuite with PlayTestSuite {
             )
             val outputModules = deps.map(_.dep.module.name.value)
             assert(
-              outputModules.forall(expectedModules.contains),
+              outputModules.iterator.forall(expectedModules.contains),
               evalCount > 0
             )
           }

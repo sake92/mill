@@ -428,8 +428,8 @@ object HelloWorldTests extends TestSuite {
       "withMacroParadise" - workspaceTest(HelloWorldTypeLevel) { eval =>
         val Right((result, evalCount)) = eval.apply(HelloWorldTypeLevel.foo.scalacPluginClasspath)
         assert(
-          result.nonEmpty,
-          result.exists { pathRef => pathRef.path.segments.contains("scalamacros") },
+          result.iterator.nonEmpty,
+          result.iterator.exists { pathRef => pathRef.path.segments.contains("scalamacros") },
           evalCount > 0
         )
       }
@@ -955,13 +955,13 @@ object HelloWorldTests extends TestSuite {
         val Right((result, _)) = eval.apply(cp)
         assert(
           // Make sure every relevant piece org.scala-lang has been substituted for org.typelevel
-          !result.map(_.toString).exists(x =>
+          !result.iterator.map(_.toString).exists(x =>
             x.contains("scala-lang") &&
               (x.contains("scala-library") || x.contains("scala-compiler") || x.contains(
                 "scala-reflect"
               ))
           ),
-          result.map(_.toString).exists(x => x.contains("typelevel") && x.contains("scala-library"))
+          result.iterator.map(_.toString).exists(x => x.contains("typelevel") && x.contains("scala-library"))
         )
       }
     }

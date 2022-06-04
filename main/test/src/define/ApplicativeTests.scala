@@ -130,7 +130,7 @@ object ApplicativeTests extends TestSuite {
       // implementation to decide if it wants to dedup them or do other things.
       val counter = new Counter()
       def up = Opt { "hello" + counter() }
-      val down = Opt { Seq(1, 2, 3).map(n => n + up() + up()) }
+      val down = Opt { Seq(1, 2, 3).map(n => "" + n + up() + up()) }
       assert(down == Some(Seq("1hello1hello2", "2hello1hello2", "3hello1hello2")))
     }
     "appliesEvaluateBeforehand" - {

@@ -14,11 +14,11 @@ private[playlib] class RouteCompilerWorker extends AutoCloseable {
       implicit ctx: Ctx
   ): RouteCompilerWorkerApi = {
     val classloaderSig =
-      toolsClasspath.map(p => p.toString().hashCode + os.mtime(p)).sum
+      toolsClasspath.map(p => p.toString().hashCode + os.mtime(p)).iterator.sum
     routeCompilerInstanceCache match {
       case Some((sig, bridge)) if sig == classloaderSig => bridge
       case _ =>
-        val toolsClassPath = toolsClasspath.map(_.toIO.toURI.toURL).toVector
+        val toolsClassPath = toolsClasspath.map(_.toIO.toURI.toURL).iterator.to(Vector)
         ctx.log.debug("Loading classes from\n" + toolsClassPath.mkString("\n"))
         val cl = mill.api.ClassLoader.create(
           toolsClassPath,
@@ -29,6 +29,7 @@ private[playlib] class RouteCompilerWorker extends AutoCloseable {
         )
         val bridge = cl
           .loadClass("mill.playlib.worker.RouteCompilerWorker")
+          .getDeclaredConstructor()
           .newInstance()
           .asInstanceOf[mill.playlib.api.RouteCompilerWorkerApi]
         routeCompilerInstanceCache = Some((classloaderSig, bridge))

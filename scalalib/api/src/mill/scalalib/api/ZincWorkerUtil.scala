@@ -120,7 +120,7 @@ trait ZincWorkerUtil {
    */
   def matchingVersions(version: String): Seq[String] = {
     (for (segments <- version.split('.').inits.filter(_.nonEmpty))
-      yield segments.mkString(".")).to(Seq)
+      yield segments.mkString(".")).toSeq
   }
 
   /**
@@ -143,9 +143,9 @@ trait ZincWorkerUtil {
         .map(_.toSeq)
     )
     val plus =
-      all.filter(v => v.nonEmpty && v <= versionParts.take(v.length)).map(_.mkString(".") + "+")
+      all.filter(v => v.nonEmpty && v <= versionParts.toSeq.take(v.length)).map(_.mkString(".") + "+")
     val minus =
-      all.filter(v => v.nonEmpty && v >= versionParts.take(v.length)).map(_.mkString(".") + "-")
+      all.filter(v => v.nonEmpty && v >= versionParts.toSeq.take(v.length)).map(_.mkString(".") + "-")
     (plus ++ minus).distinct.toSeq
   }
 }

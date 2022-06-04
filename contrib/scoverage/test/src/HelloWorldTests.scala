@@ -122,17 +122,17 @@ trait HelloWorldTests extends utest.TestSuite {
           }
           "htmlReport" - workspaceTest(HelloWorld) { eval =>
             val Right((_, _)) = eval.apply(HelloWorld.core.test.compile)
-            val Right((result, evalCount)) = eval.apply(HelloWorld.core.scoverage.htmlReport)
+            val Right((result, evalCount)) = eval.apply(HelloWorld.core.scoverage.htmlReport())
             assert(evalCount > 0)
           }
           "xmlReport" - workspaceTest(HelloWorld) { eval =>
             val Right((_, _)) = eval.apply(HelloWorld.core.test.compile)
-            val Right((result, evalCount)) = eval.apply(HelloWorld.core.scoverage.xmlReport)
+            val Right((result, evalCount)) = eval.apply(HelloWorld.core.scoverage.xmlReport())
             assert(evalCount > 0)
           }
           "console" - workspaceTest(HelloWorld) { eval =>
             val Right((_, _)) = eval.apply(HelloWorld.core.test.compile)
-            val Right((result, evalCount)) = eval.apply(HelloWorld.core.scoverage.consoleReport)
+            val Right((result, evalCount)) = eval.apply(HelloWorld.core.scoverage.consoleReport())
             assert(evalCount > 0)
           }
         }
@@ -170,17 +170,17 @@ trait HelloWorldTests extends utest.TestSuite {
       "scoverage" - {
         "htmlReport" - workspaceTest(HelloWorldSbt, sbtResourcePath) { eval =>
           val Right((_, _)) = eval.apply(HelloWorldSbt.core.test.compile)
-          val Right((result, evalCount)) = eval.apply(HelloWorldSbt.core.scoverage.htmlReport)
+          val Right((result, evalCount)) = eval.apply(HelloWorldSbt.core.scoverage.htmlReport())
           assert(evalCount > 0)
         }
         "xmlReport" - workspaceTest(HelloWorldSbt, sbtResourcePath) { eval =>
           val Right((_, _)) = eval.apply(HelloWorldSbt.core.test.compile)
-          val Right((result, evalCount)) = eval.apply(HelloWorldSbt.core.scoverage.xmlReport)
+          val Right((result, evalCount)) = eval.apply(HelloWorldSbt.core.scoverage.xmlReport())
           assert(evalCount > 0)
         }
         "console" - workspaceTest(HelloWorldSbt, sbtResourcePath) { eval =>
           val Right((_, _)) = eval.apply(HelloWorldSbt.core.test.compile)
-          val Right((result, evalCount)) = eval.apply(HelloWorldSbt.core.scoverage.consoleReport)
+          val Right((result, evalCount)) = eval.apply(HelloWorldSbt.core.scoverage.consoleReport())
           assert(evalCount > 0)
         }
       }

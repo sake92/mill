@@ -18,11 +18,11 @@ class TwirlWorker {
   private var twirlInstanceCache = Option.empty[(Long, (TwirlWorkerApi, Class[_]))]
 
   private def twirlCompilerAndClass(twirlClasspath: Agg[os.Path]): (TwirlWorkerApi, Class[_]) = {
-    val classloaderSig = twirlClasspath.map(p => p.toString().hashCode + os.mtime(p)).sum
+    val classloaderSig = twirlClasspath.map(p => p.toString().hashCode + os.mtime(p)).iterator.sum
     twirlInstanceCache match {
       case Some((sig, instance)) if sig == classloaderSig => instance
       case _ =>
-        val cl = new URLClassLoader(twirlClasspath.map(_.toIO.toURI.toURL).toArray, null)
+        val cl = new URLClassLoader(twirlClasspath.map(_.toIO.toURI.toURL).iterator.toArray, null)
 
         // Switched to using the java api because of the hack-ish thing going on later.
         //
@@ -75,7 +75,8 @@ class TwirlWorker {
           ): Unit = {
             // val twirlImports = new HashSet()
             // imports.foreach(twirlImports.add)
-            val twirlImports = hashSetClass.newInstance().asInstanceOf[Object]
+            val twirlImports =
+              hashSetClass.getDeclaredConstructor().newInstance().asInstanceOf[Object]
             val hashSetAddMethod = twirlImports.getClass.getMethod("add", classOf[Object])
             imports.foreach(hashSetAddMethod.invoke(twirlImports, _))
 
@@ -85,7 +86,8 @@ class TwirlWorker {
 
             // val twirlConstructorAnnotations = new ArrayList()
             // constructorAnnotations.foreach(twirlConstructorAnnotations.add)
-            val twirlConstructorAnnotations = arrayListClass.newInstance().asInstanceOf[Object]
+            val twirlConstructorAnnotations =
+              arrayListClass.getDeclaredConstructor().newInstance().asInstanceOf[Object]
             val arrayListAddMethod =
               twirlConstructorAnnotations.getClass.getMethod("add", classOf[Object])
             constructorAnnotations.foreach(arrayListAddMethod.invoke(

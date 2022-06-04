@@ -78,12 +78,12 @@ class TestEvaluator(
                   && !t.isInstanceOf[Input[_]]
                   && !t.ctx.external => t
             case t: mill.define.Command[_] => t
-          }.size
+          }.iterator.size
         )
       )
     } else {
       Left(
-        evaluated.failing.lookupKey(evaluated.failing.keys().next).items.next()
+        evaluated.failing.lookupKey(evaluated.failing.keys().next()).items.next()
           .asInstanceOf[Result.Failing[T]]
       )
     }
