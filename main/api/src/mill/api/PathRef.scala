@@ -46,28 +46,22 @@ object PathRef {
               val value = (attrs.mtime, attrs.size).hashCode()
               updateWithInt(value)
             } else if (jnio.Files.isReadable(path.toNIO)) {
-              val is =
-                try Some(os.read.inputStream(path))
+                try Using.resource(os.read.inputStream(path)) { is =>
+                  os.Internals.transfer(is, digestOut)
+                }
                 catch {
                   case _: jnio.FileSystemException =>
                     // This is known to happen, when we try to digest a socket file.
                     // We ignore the content of this file for now, as we would do,
                     // when the file isn't readable.
                     // See https://github.com/com-lihaoyi/mill/issues/1875
-                    None
                 }
-              is.foreach {
-                Using.resource(_) { is =>
-                  StreamSupport.stream(is, digestOut)
-                }
-              }
             }
           }
         }
       }
 
       java.util.Arrays.hashCode(digest.digest())
-
     }
     new PathRef(path, quick, sig)
   }

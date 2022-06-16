@@ -1,12 +1,12 @@
 package mill.api
 
-import java.io.{InputStream, OutputStream}
+import scala.util.Using
 
 /**
  * Misc IO utilities, eventually probably should be pushed upstream into
  * ammonite-ops
  */
-object IO extends StreamSupport {
+object IO {
 
   /**
    * Unpacks the given `src` path into the context specific destination directory.
@@ -17,10 +17,8 @@ object IO extends StreamSupport {
    */
   def unpackZip(src: os.Path, dest: os.RelPath = os.rel / "unpacked")(implicit
       ctx: Ctx.Dest
-  ): PathRef = {
+  ): PathRef = Using.resource(new java.util.zip.ZipInputStream(os.read.inputStream(src))) { zipStream =>
 
-    val byteStream = os.read.inputStream(src)
-    val zipStream = new java.util.zip.ZipInputStream(byteStream)
     while ({
       zipStream.getNextEntry match {
         case null => false
@@ -28,9 +26,9 @@ object IO extends StreamSupport {
           if (!entry.isDirectory) {
             val entryDest = ctx.dest / dest / os.RelPath(entry.getName)
             os.makeDir.all(entryDest / os.up)
-            val fileOut = new java.io.FileOutputStream(entryDest.toString)
-            IO.stream(zipStream, fileOut)
-            fileOut.close()
+            Using.resource(new java.io.FileOutputStream(entryDest.toString)) { fileOut =>
+              os.Internals.transfer(zipStream, fileOut)
+            }
           }
           zipStream.closeEntry()
           true

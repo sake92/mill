@@ -346,12 +346,9 @@ object Jvm {
     val seen = mutable.Set.empty[os.RelPath]
     seen.add(os.rel / "META-INF" / "MANIFEST.MF")
 
-    val jarStream = new JarOutputStream(
-      new FileOutputStream(jar.toIO),
-      manifest.build
-    )
-
-    try {
+    Using.resource(
+      new JarOutputStream(new FileOutputStream(jar.toIO), manifest.build)
+    ) { jarStream =>
       assert(inputPaths.iterator.forall(os.exists(_)))
       for {
         p <- inputPaths.iterator
@@ -367,8 +364,6 @@ object Jvm {
         jarStream.write(os.read.bytes(file))
         jarStream.closeEntry()
       }
-    } finally {
-      jarStream.close()
     }
   }
 
@@ -402,13 +397,12 @@ object Jvm {
     Using.resource(FileSystems.newFileSystem(URI.create(baseUri), hm.asJava)) { zipFs =>
       val manifestPath = zipFs.getPath(JarFile.MANIFEST_NAME)
       Files.createDirectories(manifestPath.getParent)
-      val manifestOut = Files.newOutputStream(
-        manifestPath,
-        StandardOpenOption.TRUNCATE_EXISTING,
-        StandardOpenOption.CREATE
-      )
-      manifest.build.write(manifestOut)
-      manifestOut.close()
+
+      Using.resource(
+        Files.newOutputStream(manifestPath, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
+      ) { manifestOut =>
+        manifest.build.write(manifestOut)
+      }
 
       val (mappings, resourceCleaner) = Assembly.loadShadedClasspath(inputPaths, assemblyRules)
       try {
@@ -461,10 +455,9 @@ object Jvm {
       if (append) Seq(StandardOpenOption.APPEND, StandardOpenOption.CREATE)
       else Seq(StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
 
-    val outputStream = java.nio.file.Files.newOutputStream(p, options: _*)
-    IO.stream(inputStream, outputStream)
-    outputStream.close()
-    inputStream.close()
+    Using.resources(inputStream, java.nio.file.Files.newOutputStream(p, options: _*)) { (inStream, outStream) =>
+      os.Internals.transfer(inStream, outStream)
+    }
   }
 
   def universalScript(

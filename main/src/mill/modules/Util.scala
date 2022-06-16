@@ -3,6 +3,7 @@ package mill.modules
 import coursier.Repository
 import mill.BuildInfo
 import mill.api.{Ctx, IO, Loose, PathRef}
+import scala.util.Using
 
 object Util {
 
@@ -10,8 +11,12 @@ object Util {
 
   {
     val millOptionsPath = sys.props("MILL_OPTIONS_PATH")
-    if (millOptionsPath != null)
-      LongMillProps.load(new java.io.FileInputStream(millOptionsPath))
+    if (millOptionsPath != null) {
+      Using.resource(new java.io.FileInputStream(millOptionsPath)) { is =>
+        LongMillProps.load(is)
+      }
+    }
+      
   }
 
   def cleanupScaladoc(v: String) = {
@@ -32,19 +37,13 @@ object Util {
 
   def download(url: String, dest: os.RelPath = os.rel / "download")(implicit ctx: Ctx.Dest): PathRef = {
     val out = ctx.dest / dest
-
     val website = new java.net.URI(url).toURL
-    val rbc = java.nio.channels.Channels.newChannel(website.openStream)
-    try {
-      val fos = new java.io.FileOutputStream(out.toIO)
-      try {
-        fos.getChannel.transferFrom(rbc, 0, java.lang.Long.MAX_VALUE)
-        PathRef(out)
-      } finally {
-        fos.close()
-      }
-    } finally {
-      rbc.close()
+    Using.resources(
+      java.nio.channels.Channels.newChannel(website.openStream),
+      new java.io.FileOutputStream(out.toIO)
+    ) { (rbc, fos) =>
+      fos.getChannel.transferFrom(rbc, 0, java.lang.Long.MAX_VALUE)
+      PathRef(out)
     }
   }
 

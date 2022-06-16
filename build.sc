@@ -285,8 +285,8 @@ trait MillModule extends MillApiModule with MillAutoTestSetup { outer =>
   }
   override def scalacOptions = T {
     super.scalacOptions() ++ Seq(s"-Xplugin:${main.moduledefs.jar().path}")
-  }
-}
+  } 
+}   
 
 object main extends MillModule {
   override def moduleDeps = Seq(core, client)
@@ -373,7 +373,7 @@ object main extends MillModule {
 
       os.write(dir / "mill" / "BuildInfo.scala", code, createFolders = true)
     }
-  }
+  }   
 
   object moduledefs extends MillPublishModule with ScalaModule {
     def scalaVersion = Deps.scalaVersion
@@ -382,7 +382,7 @@ object main extends MillModule {
       Deps.sourcecode
     )
   }
-
+    
   object client extends MillPublishModule {
     override def ivyDeps = Agg(
       Deps.junixsocket
@@ -1149,7 +1149,7 @@ object dev extends MillModule {
       jvmArgs,
       jvmArgs,
       classpath,
-      Agg(pathingJar().path.toString) // TODO not working yet on Windows! see #791
+      Agg(pathingJar().path.toString) // TODO not working fully on Windows! see #791
     )
   }
 

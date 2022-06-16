@@ -1,13 +1,8 @@
 package mill
 package scalalib
 
-import java.io.FileInputStream
-import java.lang.annotation.Annotation
-import java.lang.reflect.Modifier
-import java.util.zip.ZipInputStream
-
 import coursier.util.Task
-import coursier.{Dependency, Fetch, Repository, Resolution}
+import coursier.{Dependency, Repository, Resolution}
 import mill.api.{Ctx, Loose, PathRef, Result}
 import sbt.testing._
 
