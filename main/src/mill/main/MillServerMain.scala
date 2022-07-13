@@ -87,7 +87,7 @@ class Server[T](
     locks: Locks
 ) {
 
-  private val originalStdout = System.out
+  val originalStdout = System.out
 
   def run() = {
     val initialSystemProperties = sys.props.toMap
@@ -105,6 +105,7 @@ class Server[T](
             val clientSockOpt = Server.interruptWith(
               "MillSocketTimeoutInterruptThread",
               acceptTimeoutMillis,
+              (),
               serverSocket.accept()
             )
 
@@ -239,7 +240,7 @@ object Server {
     }
   }
 
-  def interruptWith[T](timeoutThreadName: String, millis: Int, t: => T): Option[T] = {
+  def interruptWith[T](timeoutThreadName: String, millis: Int, close: => Unit, t: => T): Option[T] = {
 
     val timeoutThread = new Thread(
       () => {
