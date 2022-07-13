@@ -5,14 +5,12 @@ import sun.misc.{Signal, SignalHandler}
 import java.io._
 import java.net.Socket
 import scala.jdk.CollectionConverters._
+import scala.util.Using
 import org.newsclub.net.unix.AFUNIXServerSocket
 import org.newsclub.net.unix.AFUNIXSocketAddress
 import mill.{BuildInfo, MillMain}
 import mill.main.client._
-import mill.api.DummyInputStream
 import mill.main.client.lock.{Lock, Locks}
-
-import java.util.function.Consumer
 
 trait MillServerMain[T] {
   var stateCache = Option.empty[T]
@@ -89,38 +87,42 @@ class Server[T](
     locks: Locks
 ) {
 
-  val originalStdout = System.out
+  private val originalStdout = System.out
+
   def run() = {
     val initialSystemProperties = sys.props.toMap
     Server.tryLockBlock(locks.processLock) {
-      var running = true
-      while (running) {
-        Server.lockBlock(locks.serverLock) {
-          val socketName = lockBase + "/mill-" + Util.md5hex(new File(lockBase).getCanonicalPath()) + "-io"
-          new File(socketName).delete()
-          val addr = AFUNIXSocketAddress.of(new File(socketName))
-          val serverSocket = AFUNIXServerSocket.bindOn(addr)
-          val socketClose = () => serverSocket.close()
 
-          val sockOpt = Server.interruptWith(
-            "MillSocketTimeoutInterruptThread",
-            acceptTimeoutMillis,
-            socketClose(),
-            serverSocket.accept()
-          )
+      val socketName = lockBase + "/mill-" + Util.md5hex(new File(lockBase).getCanonicalPath()) + "-io"
+      val socketFile = new File(socketName)
+      socketFile.delete()
+      val socketAddr = AFUNIXSocketAddress.of(socketFile)
 
-          sockOpt match {
-            case None => running = false
-            case Some(sock) =>
-              try {
-                handleRun(sock, initialSystemProperties)
-                serverSocket.close()
-              } catch { case e: Throwable => e.printStackTrace(originalStdout) }
+      Using.resource(AFUNIXServerSocket.bindOn(socketAddr)) { serverSocket =>
+        var running = true
+        while (running) {
+          Server.lockBlock(locks.serverLock) {
+            val clientSockOpt = Server.interruptWith(
+              "MillSocketTimeoutInterruptThread",
+              acceptTimeoutMillis,
+              serverSocket.accept()
+            )
+
+            clientSockOpt match {
+              case None => // when server times out or error connecting
+                running = false
+              case Some(clientSocket) =>
+                try {
+                  handleRun(clientSocket, initialSystemProperties)
+                } catch { case e: Throwable =>
+                  e.printStackTrace(originalStdout)
+                }
+            }
           }
+          // Make sure you give an opportunity for the client to probe the lock
+          // and realize the server has released it to signal completion
+          Thread.sleep(10)
         }
-        // Make sure you give an opportunity for the client to probe the lock
-        // and realize the server has released it to signal completion
-        Thread.sleep(10)
       }
     }.getOrElse(throw new Exception("PID already present"))
   }
@@ -135,6 +137,7 @@ class Server[T](
     pumperThread.start()
     pipedInput
   }
+
   def handleRun(clientSocket: Socket, initialSystemProperties: Map[String, String]) = {
 
     val currentOutErr = clientSocket.getOutputStream
@@ -209,13 +212,13 @@ class Server[T](
     catch {
       case e: java.lang.Error if e.getMessage.contains("Cleaner terminated abnormally") =>
       // ignore this error and do nothing; seems benign
+    } finally {
+      // flush before closing the socket
+      System.out.flush()
+      System.err.flush()
+
+      clientSocket.close()
     }
-
-    // flush before closing the socket
-    System.out.flush()
-    System.err.flush()
-
-    clientSocket.close()
   }
 }
 
@@ -236,33 +239,31 @@ object Server {
     }
   }
 
-  def interruptWith[T](threadName: String, millis: Int, close: => Unit, t: => T): Option[T] = {
-    @volatile var interrupt = true
-    @volatile var interrupted = false
-    val thread = new Thread(
+  def interruptWith[T](timeoutThreadName: String, millis: Int, t: => T): Option[T] = {
+
+    val timeoutThread = new Thread(
       () => {
-        try Thread.sleep(millis)
-        catch { case t: InterruptedException => /* Do Nothing */ }
-        if (interrupt) {
-          interrupted = true
-          close
+        try {
+          Thread.sleep(millis)
+          // when times out trigger an interrupt
+          Thread.currentThread().interrupt()
+        } catch { case _: InterruptedException =>
+          // if interrupted from outside do nothing
         }
       },
-      threadName
+      timeoutThreadName
     )
+    timeoutThread.start()
 
-    thread.start()
     try {
       val res =
         try Some(t)
         catch { case e: Throwable => None }
 
-      if (interrupted) None
+      if (timeoutThread.isInterrupted) None
       else res
-
     } finally {
-      thread.interrupt()
-      interrupt = false
+      timeoutThread.interrupt()
     }
   }
 }
